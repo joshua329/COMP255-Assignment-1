@@ -58,9 +58,9 @@ def prepare_training_set (max_Range, training_Data):
             sample_data = training_data[1000*s:, :]
             features = []
             for i in range(3):
-                features.append(np.min(sample_data[:, i]))
-                features.append(np.max(sample_data[:, i]))
-                features.append(np.mean(sample_data[:, i]))
+                features.append(np.min(sample_data[:, i])) # gets min value
+                features.append(np.max(sample_data[:, i])) # get max value 
+                features.append(df.std(sample_data[:, i])) # gets standard deviation
             features.append(sample_data[0, -1])
             features = np.array([features])
             train_Data = np.concatenate((train_Data, features), axis=0)
