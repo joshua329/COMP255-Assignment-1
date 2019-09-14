@@ -26,21 +26,14 @@ from sklearn.model_selection import GridSearchCV
 #document your progress and think critically what are missing from such IoT application and what are missing to move such IoT application from PoC (proof of concept) to solve real-world life
 #think with which components added, what kind of real-world problems can be solved by it -> this shall be discussed in the conclusion part in the document
 
-'''
-At first, we should explore the raw time-series sensor data. We could draw line plot of sensor signals.
-In this example code, the wrist sensor accelerometer data dataset_1 sitting activity is visualized.   
-'''
-
-def input_Data (i)
+def load_dataset (i)
     df = pd.read_csv('C:/Users/CHARLIE/Desktop/COMP255/dataset/dataset_' + str(fn) + '.txt', sep=',', header=None)
-    return def
+    return df
     
-def data_visulization(df): # Sprint 1
+def visualize_data(df): # Sprint 1
     for fn in range (1, 20):
-    
         print ("---------------------------------------------------------") # indicates a new file
         print ("File: data-set " + str(fn))
-    
         df = input_Data(fn)
     b, a = signal.butter(3, 0.04, 'low', analog=False)
     
@@ -52,28 +45,32 @@ def data_visulization(df): # Sprint 1
             plt.plot(noise_removing(b, a, Recognition_Activity[:, j - 1: j]))
             plt.show()
 
-'''
-For raw sensor data, it usually contains noise that arises from different sources, such as sensor mis-calibration, sensor errors, errors in sensor placement, or noisy environments. We could apply filter to remove noise of sensor data
-to smooth data. In this example code, Butterworth low-pass filter is applied. 
-'''
-def noise_removing(arr):
+def remove_signal_noises(arr):
     b, a = signal.butter(3, 0.04, 'low', analog=False) # 3rd order, filtering with lowpass
     return signal.lfilter(b, a, arr);
 
-
-'''
-To build a human activity recognition system, we need to extract features from raw data and create feature dataset for training 
-machine learning models.
-
-Please create new functions to implement your own feature engineering. The function should output training and testing dataset.
-'''
-def feature_engineering_example():
-    training = np.empty(shape=(0, 10))
-    testing = np.empty(shape=(0, 10))
-    # deal with each dataset file
+def prepare_training_set (max_Range, training_Data):
+    train_Data = np.empty(shape=(0, 10))
+    for s in range(max_Range):
+        if s < max_Range - 1:
+            sample_data = training_data[1000*s:1000*(s + 1), :]
+        else:
+            sample_data = training_data[1000*s:, :]
+            features = []
+            for i in range(3):
+                features.append(np.min(sample_data[:, i]))
+                features.append(np.max(sample_data[:, i]))
+                features.append(np.mean(sample_data[:, i]))
+            features.append(sample_data[0, -1])
+            features = np.array([features])
+            train_Data = np.concatenate((train_Data, features), axis=0)
+    return train_Data
+    
+def extract_features ():
+    train_Data = np.empty(shape=(0, 10))
+    test_data = np.empty(shape=(0, 10))
     for i in range(1, 20):
-        df = pd.read_csv('C:/Users/CHARLIE/Desktop/COMP255/dataset/dataset_' + str(i + 1) + '.txt', sep=',', header=None)
-        print('deal with dataset ' + str(i + 1))
+        df = input_Data(i)
         for c in range(1, 14):
             Recognition_Activity = df[df[24] == c].values
             b, a = signal.butter(3, 0.04, 'low', analog=False)
@@ -85,47 +82,21 @@ def feature_engineering_example():
             testing_data = Recognition_Activity[training_len:, :]
             training_sample_number = training_len // 1000 + 1
             testing_sample_number = (datat_len - training_len) // 1000 + 1
-
-            for s in range(training_sample_number):
-                if s < training_sample_number - 1:
-                    sample_data = training_data[1000*s:1000*(s + 1), :]
-                else:
-                    sample_data = training_data[1000*s:, :]
-                
-                feature_sample = []
-                for i in range(3):
-                    feature_sample.append(np.min(sample_data[:, i]))
-                    feature_sample.append(np.max(sample_data[:, i]))
-                    feature_sample.append(np.mean(sample_data[:, i]))
-                feature_sample.append(sample_data[0, -1])
-                feature_sample = np.array([feature_sample])
-                training = np.concatenate((training, feature_sample), axis=0)
             
-            for s in range(testing_sample_number):
-                if s < training_sample_number - 1:
-                    sample_data = testing_data[1000*s:1000*(s + 1), :]
-                else:
-                    sample_data = testing_data[1000*s:, :]
-
-                feature_sample = []
-                for i in range(3):
-                    feature_sample.append(np.min(sample_data[:, i]))
-                    feature_sample.append(np.max(sample_data[:, i]))
-                    feature_sample.append(np.mean(sample_data[:, i]))
-                feature_sample.append(sample_data[0, -1])
-                feature_sample = np.array([feature_sample])
-                testing = np.concatenate((testing, feature_sample), axis=0)
+            train_Data = prepare_training_set (training_sample_number, training_data);
+            testing = prepare_training_set (training_sample_number, training_data);
 
     df_training = pd.DataFrame(training)
     df_testing = pd.DataFrame(testing)
+    
     df_training.to_csv('C:/Users/CHARLIE/Desktop/COMP255/dataset/training_data.csv', index=None, header=None)
     df_testing.to_csv('C:/Users/CHARLIE/Desktop/COMP255/dataset/testing_data.csv', index=None, header=None)
-def model_training_and_evaluation_example():
-    df_training = pd.read_csv('training_data.csv', header=None)
-    df_testing = pd.read_csv('testing_data.csv', header=None)
+    
+def training_the_given_models():
+    df_training = pd.read_csv('C:/Users/CHARLIE/Desktop/COMP255/dataset/training_data.csv', header=None)
+    df_testing = pd.read_csv('C:/Users/CHARLIE/Desktop/COMP255/dataset/testing_data.csv', header=None)
 
-    y_train = df_training[9].values
-    # Labels should start from 0 in sklearn
+    y_train = df_training[9].values # Labels should start from 0 in sklearn
     y_train = y_train - 1
     df_training = df_training.drop([9], axis=1)
     X_train = df_training.values
@@ -135,8 +106,6 @@ def model_training_and_evaluation_example():
     df_testing = df_testing.drop([9], axis=1)
     X_test = df_testing.values
     
-    # Feature normalization for improving the performance of machine learning models. In this example code, 
-    # StandardScaler is used to scale original feature to be centered around zero. You could try other normalization methods.
     scaler = preprocessing.StandardScaler().fit(X_train)
     X_train = scaler.transform(X_train)
     X_test = scaler.transform(X_test)
@@ -145,20 +114,11 @@ def model_training_and_evaluation_example():
     knn = KNeighborsClassifier(n_neighbors=3)
     knn.fit(X_train, y_train)
 
-    # Evaluation. when we train a machine learning model on training set, we should evaluate its performance on testing set.
-    # We could evaluate the model by different metrics. Firstly, we could calculate the classification accuracy. In this example
-    # code, when n_neighbors is set to 4, the accuracy achieves 0.757.
     y_pred = knn.predict(X_test)
     print('Accuracy: ', accuracy_score(y_test, y_pred))
     # We could use confusion matrix to view the classification for each activity.
     print(confusion_matrix(y_test, y_pred))
     
-
-    # Another machine learning model: svm. In this example code, we use gridsearch to find the optimial classifier
-    # It will take a long time to find the optimal classifier.
-    # the accuracy for SVM classifier with default parameters is 0.71, 
-    # which is worse than KNN. The reason may be parameters of svm classifier are not optimal.  
-    # Another reason may be we only use 9 features and they are not enough to build a good svm classifier. 
     tuned_parameters = [{'kernel': ['rbf'], 'gamma': [1e-1,1e-2, 1e-3, 1e-4],
                      'C': [1e-3, 1e-2, 1e-1, 1, 10, 100, 100]},
                     {'kernel': ['linear'], 'C': [1e-3, 1e-2, 1e-1, 1, 10, 100]}]
@@ -171,16 +131,3 @@ def model_training_and_evaluation_example():
     y_pred = clf.predict(X_test)
     print('Accuracy: ', accuracy_score(y_test, y_pred))
     print(confusion_matrix(y_test, y_pred))
-
-# print("# Tuning hyper-parameters for %s" % score)
-# print()
-# clf = GridSearchCV(SVC(), tuned_parameters, cv=10,
-#                    scoring=score)
-# clf.fit(x_train, y_train)
-
-# if __name__ == '__main__':
-    
-    # data_visulization()
-    # noise_removing()
-    # feature_engineering_example()
-    # model_training_and_evaluation_example()
