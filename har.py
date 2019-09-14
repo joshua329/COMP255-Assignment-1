@@ -31,22 +31,25 @@ At first, we should explore the raw time-series sensor data. We could draw line 
 In this example code, the wrist sensor accelerometer data dataset_1 sitting activity is visualized.   
 '''
 
-def data_visulization(df):
-    # Sprint 1
-    for fn in range (1, 20):
-    print ("---------------------------------------------------------") # indicates a new file
-    print ("File: data-set " + str(fn))
+def input_Data (i)
     df = pd.read_csv('C:/Users/CHARLIE/Desktop/COMP255/dataset/dataset_' + str(fn) + '.txt', sep=',', header=None)
-    for i in range (1, 14): #upper range is not inclusive 
+    return def
+    
+def data_visulization(df): # Sprint 1
+    for fn in range (1, 20):
+    
+        print ("---------------------------------------------------------") # indicates a new file
+        print ("File: data-set " + str(fn))
+    
+        df = input_Data(fn)
+    b, a = signal.butter(3, 0.04, 'low', analog=False)
+    
+    for i in range (1, 14): #upper range is not inclusive
         Recognition_Activity = df[df[24] == i].values # getting the human activity code
         print ("Active Code: " + str(i))
-        for k in range (0, 4): # to loop through the 
-            print ("Acceleromater " + str(k + 1))
-            plt.plot(noise_removing(Recognition_Activity[:, 2 * k * 3:(2 * k * 3) + 3]))
-            plt.show()
-            
-            print ("Gyroscope " + str(k + 1))
-            plt.plot(noise_removing(Recognition_Activity[:, 2 * k * 3:(2 * k * 3) + 6]))
+        Recognition_Activity = noise_removing(b, a, Recognition_Activity[::])
+        for j in range (1, 7):
+            plt.plot(noise_removing(b, a, Recognition_Activity[:, j - 1: j]))
             plt.show()
 
 '''
@@ -55,7 +58,7 @@ calibration, sensor errors, errors in sensor placement, or noisy environments. W
 to smooth data. In this example code, Butterworth low-pass filter is applied. 
 '''
 def noise_removing(arr):
-    b, a = signal.butter(1, 0.04, 'low', analog=False) # 1st order, filtering with lowpass
+    b, a = signal.butter(3, 0.04, 'low', analog=False) # 3rd order, filtering with lowpass
     return signal.lfilter(b, a, arr);
 
 
@@ -74,7 +77,7 @@ def feature_engineering_example():
         print('deal with dataset ' + str(i + 1))
         for c in range(1, 14):
             activity_data = df[df[24] == c].values
-            b, a = signal.butter(4, 0.04, 'low', analog=False)
+            b, a = signal.butter(3, 0.04, 'low', analog=False)
             for j in range(24):
                 activity_data[:, j] = signal.lfilter(b, a, activity_data[:, j])
             
