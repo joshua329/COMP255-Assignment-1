@@ -53,8 +53,7 @@ def data_visulization(df): # Sprint 1
             plt.show()
 
 '''
-For raw sensor data, it usually contains noise that arises from different sources, such as sensor mis-
-calibration, sensor errors, errors in sensor placement, or noisy environments. We could apply filter to remove noise of sensor data
+For raw sensor data, it usually contains noise that arises from different sources, such as sensor mis-calibration, sensor errors, errors in sensor placement, or noisy environments. We could apply filter to remove noise of sensor data
 to smooth data. In this example code, Butterworth low-pass filter is applied. 
 '''
 def noise_removing(arr):
@@ -72,24 +71,18 @@ def feature_engineering_example():
     training = np.empty(shape=(0, 10))
     testing = np.empty(shape=(0, 10))
     # deal with each dataset file
-    for i in range(19):
-        df = pd.read_csv('dataset/dataset_' + str(i + 1) + '.txt', sep=',', header=None)
+    for i in range(1, 20):
+        df = pd.read_csv('C:/Users/CHARLIE/Desktop/COMP255/dataset/dataset_' + str(i + 1) + '.txt', sep=',', header=None)
         print('deal with dataset ' + str(i + 1))
         for c in range(1, 14):
-            activity_data = df[df[24] == c].values
+            Recognition_Activity = df[df[24] == c].values
             b, a = signal.butter(3, 0.04, 'low', analog=False)
             for j in range(24):
-                activity_data[:, j] = signal.lfilter(b, a, activity_data[:, j])
-            
-            datat_len = len(activity_data)
+                Recognition_Activity[:, j] = signal.lfilter(b, a, activity_data[:, j])
+            datat_len = len(Recognition_Activity)
             training_len = math.floor(datat_len * 0.8)
-            training_data = activity_data[:training_len, :]
-            testing_data = activity_data[training_len:, :]
-
-            # data segementation: for time series data, we need to segment the whole time series, and then extract features from each period of time
-            # to represent the raw data. In this example code, we define each period of time contains 1000 data points. Each period of time contains 
-            # different data points. You may consider overlap segmentation, which means consecutive two segmentation share a part of data points, to 
-            # get more feature samples.
+            training_data = Recognition_Activity[:training_len, :]
+            testing_data = Recognition_Activity[training_len:, :]
             training_sample_number = training_len // 1000 + 1
             testing_sample_number = (datat_len - training_len) // 1000 + 1
 
@@ -98,9 +91,7 @@ def feature_engineering_example():
                     sample_data = training_data[1000*s:1000*(s + 1), :]
                 else:
                     sample_data = training_data[1000*s:, :]
-                # in this example code, only three accelerometer data in wrist sensor is used to extract three simple features: min, max, and mean value in
-                # a period of time. Finally we get 9 features and 1 label to construct feature dataset. You may consider all sensors' data and extract more
-
+                
                 feature_sample = []
                 for i in range(3):
                     feature_sample.append(np.min(sample_data[:, i]))
@@ -127,14 +118,8 @@ def feature_engineering_example():
 
     df_training = pd.DataFrame(training)
     df_testing = pd.DataFrame(testing)
-    df_training.to_csv('training_data.csv', index=None, header=None)
-    df_testing.to_csv('testing_data.csv', index=None, header=None)
-
-'''
-When we have training and testing feature set, we could build machine learning models to recognize human activities.
-
-Please create new functions to fit your features and try other models.
-'''
+    df_training.to_csv('C:/Users/CHARLIE/Desktop/COMP255/dataset/training_data.csv', index=None, header=None)
+    df_testing.to_csv('C:/Users/CHARLIE/Desktop/COMP255/dataset/testing_data.csv', index=None, header=None)
 def model_training_and_evaluation_example():
     df_training = pd.read_csv('training_data.csv', header=None)
     df_testing = pd.read_csv('testing_data.csv', header=None)
@@ -193,9 +178,9 @@ def model_training_and_evaluation_example():
 #                    scoring=score)
 # clf.fit(x_train, y_train)
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
     
     # data_visulization()
     # noise_removing()
     # feature_engineering_example()
-    model_training_and_evaluation_example()
+    # model_training_and_evaluation_example()
