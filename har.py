@@ -9,23 +9,6 @@ from sklearn.metrics import make_scorer, accuracy_score, confusion_matrix
 from sklearn.svm import SVC
 from sklearn.model_selection import GridSearchCV
 
-#Commented by: James Xi Zheng 12/Aug/2019
-#please create functions to do the following jobs
-#1. load dataset ->  sample code availalable in the workshops
-#2. visualize data -> sample code given
-#3. remove signal noises -> sample code given
-#4. extract features -> sample code given
-#5. prepare training set -> sample code given 
-#6. training the given models -> sample code given
-#7. test the given models -> sample code given
-#8. print out the evaluation results -> sample code given
-
-#as I said in the lecture, the sample code is completed in a un-professional software engineering style
-#software refactoring is required
-#please manage the project using SCRUM sprints and manage the source code using Github
-#document your progress and think critically what are missing from such IoT application and what are missing to move such IoT application from PoC (proof of concept) to solve real-world life
-#think with which components added, what kind of real-world problems can be solved by it -> this shall be discussed in the conclusion part in the document
-
 def load_dataset (i)
     df = pd.read_csv('C:/Users/CHARLIE/Desktop/COMP255/dataset/dataset_' + str(fn) + '.txt', sep=',', header=None)
     return df
@@ -35,15 +18,13 @@ def visualize_data(df): # Sprint 1
         print ("---------------------------------------------------------") # indicates a new file
         print ("File: data-set " + str(fn))
         df = input_Data(fn)
-    b, a = signal.butter(3, 0.04, 'low', analog=False)
-    
-    for i in range (1, 14): #upper range is not inclusive
-        Recognition_Activity = df[df[24] == i].values # getting the human activity code
-        print ("Active Code: " + str(i))
-        Recognition_Activity = noise_removing(b, a, Recognition_Activity[::])
-        for j in range (1, 7):
-            plt.plot(noise_removing(b, a, Recognition_Activity[:, j - 1: j]))
-            plt.show()
+        for i in range (1, 14): #upper range is not inclusive
+            Recognition_Activity = df[df[24] == i].values # getting the human activity code
+            print ("Active Code: " + str(i))
+            Recognition_Activity = noise_removing(b, a, Recognition_Activity[::])
+            for j in range (1, 7): # All the values of the first sensor
+                plt.plot(noise_removing(b, a, Recognition_Activity[:, j - 1: j]))
+                plt.show()
 
 def remove_signal_noises(arr):
     b, a = signal.butter(3, 0.04, 'low', analog=False) # 3rd order, filtering with lowpass
@@ -70,12 +51,11 @@ def extract_features ():
     train_Data = np.empty(shape=(0, 10))
     test_data = np.empty(shape=(0, 10))
     for i in range(1, 20):
-        df = input_Data(i)
+        df = input_Data(i) # reading input files
         for c in range(1, 14):
             Recognition_Activity = df[df[24] == c].values
-            b, a = signal.butter(3, 0.04, 'low', analog=False)
             for j in range(24):
-                Recognition_Activity[:, j] = signal.lfilter(b, a, activity_data[:, j])
+                Recognition_Activity[:, j] = remove_signal_noises(Recognition_Activity[:, j])
             datat_len = len(Recognition_Activity)
             training_len = math.floor(datat_len * 0.8)
             training_data = Recognition_Activity[:training_len, :]
@@ -91,26 +71,25 @@ def extract_features ():
     
     df_training.to_csv('C:/Users/CHARLIE/Desktop/COMP255/dataset/training_data.csv', index=None, header=None)
     df_testing.to_csv('C:/Users/CHARLIE/Desktop/COMP255/dataset/testing_data.csv', index=None, header=None)
+
+def test_the_given_models(arr_values, subtract):
+    return (df_testing[9].values) - int(subtract)
     
 def training_the_given_models():
     df_training = pd.read_csv('C:/Users/CHARLIE/Desktop/COMP255/dataset/training_data.csv', header=None)
     df_testing = pd.read_csv('C:/Users/CHARLIE/Desktop/COMP255/dataset/testing_data.csv', header=None)
+    # training variables
+    y_train = test_the_given_models(df_training[9].values, 1) 
+    X_train = (df_training.drop([9], axis=1)).values
 
-    y_train = df_training[9].values # Labels should start from 0 in sklearn
-    y_train = y_train - 1
-    df_training = df_training.drop([9], axis=1)
-    X_train = df_training.values
-
-    y_test = df_testing[9].values
-    y_test = y_test - 1
-    df_testing = df_testing.drop([9], axis=1)
-    X_test = df_testing.values
+    y_test = test_the_given_models(df_testing[9].values, 1)
+    X_test = (df_testing.drop([9], axis=1)).values
     
     scaler = preprocessing.StandardScaler().fit(X_train)
     X_train = scaler.transform(X_train)
     X_test = scaler.transform(X_test)
 
-    # Build KNN classifier, in this example code
+    # KNN Algorithm
     knn = KNeighborsClassifier(n_neighbors=3)
     knn.fit(X_train, y_train)
 
@@ -125,6 +104,8 @@ def training_the_given_models():
     acc_scorer = make_scorer(accuracy_score)
     grid_obj  = GridSearchCV(SVC(), tuned_parameters, cv=10, scoring=acc_scorer)
     grid_obj  = grid_obj .fit(X_train, y_train)
+    
+    # SVM Algorit
     clf = grid_obj.best_estimator_
     print('best clf:', clf)
     clf.fit(X_train, y_train)
