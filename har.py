@@ -23,12 +23,16 @@ def visualize_data(df): # Sprint 1
             print ("Active Code: " + str(i))
             Recognition_Activity = noise_removing(b, a, Recognition_Activity[::])
             for j in range (1, 7): # All the values of the first sensor
-                plt.plot(noise_removing(b, a, Recognition_Activity[:, j - 1: j]))
+                plt.plot(Recognition_Activity[:, j - 1: j])
                 plt.show()
 
 def remove_signal_noises(arr):
     b, a = signal.butter(3, 0.04, 'low', analog=False) # 3rd order, filtering with lowpass
     return signal.lfilter(b, a, arr);
+
+def print_Evaluation(matrix):
+    print(matrix)
+    
 
 def prepare_training_set (max_Range, training_Data):
     train_Data = np.empty(shape=(0, 10))
@@ -78,6 +82,7 @@ def test_the_given_models(arr_values, subtract):
 def training_the_given_models():
     df_training = pd.read_csv('C:/Users/CHARLIE/Desktop/COMP255/dataset/training_data.csv', header=None)
     df_testing = pd.read_csv('C:/Users/CHARLIE/Desktop/COMP255/dataset/testing_data.csv', header=None)
+    
     # training variables
     y_train = test_the_given_models(df_training[9].values, 1) 
     X_train = (df_training.drop([9], axis=1)).values
@@ -96,7 +101,7 @@ def training_the_given_models():
     y_pred = knn.predict(X_test)
     print('Accuracy: ', accuracy_score(y_test, y_pred))
     # We could use confusion matrix to view the classification for each activity.
-    print(confusion_matrix(y_test, y_pred))
+    print_Evaluation(confusion_matrix(y_test, y_pred))
     
     tuned_parameters = [{'kernel': ['rbf'], 'gamma': [1e-1,1e-2, 1e-3, 1e-4],
                      'C': [1e-3, 1e-2, 1e-1, 1, 10, 100, 100]},
@@ -111,4 +116,4 @@ def training_the_given_models():
     clf.fit(X_train, y_train)
     y_pred = clf.predict(X_test)
     print('Accuracy: ', accuracy_score(y_test, y_pred))
-    print(confusion_matrix(y_test, y_pred))
+    print_Evaluation(confusion_matrix(y_test, y_pred))
